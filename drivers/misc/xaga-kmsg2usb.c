@@ -249,14 +249,13 @@ static void k2u_open_work_fn(struct work_struct *work)
 		k2u_marker ? "kmsg2usb" : "off");
 
 	/* Default: keep g_serial as-is only when the marker is present.
-	 * When the marker is absent we tear the gadget down to free the
-	 * UDC for charging/other uses. */
+	 * When the marker is absent we keep g_serial inactive and avoid
+	 * teardowns during early boot. */
 	if (k2u_marker) {
 		k2u_enabled = true;
 		k2u_apply(true);	/* no-op if already up */
 	} else {
-		k2u_enabled = true;	/* assume up until proven off */
-		k2u_apply(false);
+		k2u_enabled = false;
 	}
 }
 

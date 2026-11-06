@@ -2335,6 +2335,9 @@ static void __composite_disconnect(struct usb_gadget *gadget)
 	struct usb_composite_dev	*cdev = get_gadget_data(gadget);
 	unsigned long			flags;
 
+	if (!cdev)
+		return;
+
 	/*
 	 * Android: f_accessory can handle HID packets without being bound to a
 	 *  config so we unfortunately require this hook to clean it up.
@@ -2350,7 +2353,7 @@ static void __composite_disconnect(struct usb_gadget *gadget)
 	cdev->suspended = 0;
 	if (cdev->config)
 		reset_config(cdev);
-	if (cdev->driver->disconnect)
+	if (cdev->driver && cdev->driver->disconnect)
 		cdev->driver->disconnect(cdev);
 	spin_unlock_irqrestore(&cdev->lock, flags);
 }
@@ -2632,6 +2635,9 @@ void composite_suspend(struct usb_gadget *gadget)
 	struct usb_composite_dev	*cdev = get_gadget_data(gadget);
 	struct usb_function		*f;
 
+	if (!cdev)
+		return;
+
 	/* REVISIT:  should we have config level
 	 * suspend/resume callbacks?
 	 */
@@ -2642,7 +2648,7 @@ void composite_suspend(struct usb_gadget *gadget)
 				f->suspend(f);
 		}
 	}
-	if (cdev->driver->suspend)
+	if (cdev->driver && cdev->driver->suspend)
 		cdev->driver->suspend(cdev);
 
 	cdev->suspended = 1;
@@ -2660,11 +2666,14 @@ void composite_resume(struct usb_gadget *gadget)
 	struct usb_function		*f;
 	unsigned			maxpower;
 
+	if (!cdev)
+		return;
+
 	/* REVISIT:  should we have config level
 	 * suspend/resume callbacks?
 	 */
 	DBG(cdev, "resume\n");
-	if (cdev->driver->resume)
+	if (cdev->driver && cdev->driver->resume)
 		cdev->driver->resume(cdev);
 	if (cdev->config) {
 		list_for_each_entry(f, &cdev->config->functions, list) {
